@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!-- put this in your /var/www/ folder -->
+<!-- see wsds.php for server/client commands -->
+<html>
+  <head>
+    <title>NFC | M2M</title>
+  </head>
+  <body onunload="sendClose()">  <!-- doesn't work with safari -->
+  <h1>PN532 | Atmega168 | RaspberryPi | WebSocket M2M<br></h1>
+  <h2><p id="conn">Connection Closed</p></h2>
+  <h2><p id="scan"></p></h2>
+  <h2 id="found"></h2>
+  <h2 id="name"></h2>
+  <h2 id="credits"></h2>
+
+
+  <button onclick="sendScan()">Scan for Cards</button>
+
+  <button onclick="sendClose()">Close Connection</button>
+
+  </body>
+  <script>
+  var cards = 0;
+  var socket;
+  var host = "ws://71.204.163.123:2342/sockettest";
+  try {
+    socket = new WebSocket(host);
+    socket.binaryType = 'blob';
+    log(socket.readyState);
+    socket.onopen = function(msg) {
+      log("Connected");
+      };
+    socket.onmessage = function(msg) {
+      if (msg.data instanceof(Blob)) {
+        var reader = new FileReader();
+        reader.onload = function() { 
+          cards++;
+          printFound();
+          var arrayBuffer = reader.result;
+          var byteview = new Uint8Array(arrayBuffer);
+          switch (byteview[0]) {
+            case 0xA0:
+              in_mess = "";
+	      for(i = 1;i < 17;++i) {
+                in_mess += chr(byteview[i]);
+	      }
+	      logName(in_mess)
+              break;
+            case 0xA1:
+	      lowVal = byteview[1];
+	      highVal = byteview[2] * 256;
+              logcredits(lowVal+highVal);
+              break;
+            case 0xA2:
+              break;
+            default:
+              log("got byteview"+byteview[0])
+          }
+        };
+        reader.readAsArrayBuffer(msg.data);
+      } else {
+        logName(msg.data); 
+        }
+    };
+    socket.onclose = function(msg) {
+      log("Not Connected");
+      };
+  }
+  catch(ex) {
+    log(ex);
+  }
+
+  function sendScan() {
+    if (socket.readyState == 1) {
+      var buffer =  new ArrayBuffer(2);
+      var message = new Uint8Array(buffer);
+      message[0] = 0x20;
+      message[1] = 0x21;
+      socket.send(message);
+      printScan();
+    }
+  }
+
+  function sendClose() {
+    if (socket.readyState == 1) {
+      var buffer = new ArrayBuffer(2);
+      var message = new Uint8Array(buffer);
+      message[0] = 0x00;
+      message[1] = 0x00;
+      socket.send(message);
+      log("Connection Closed");
+    }
+  }
+
+  function $(id) { return document.getElementById(id); }
+  function log(msg) { $("conn").innerHTML = msg; }
+  function logName(msg) { $("name").innerHTML = "Name: "+msg; }
+  function logcredits(val) { $("credits").innerHTML="Credits: "+val; }
+  function printScan() { $("scan").innerHTML="Scanning..."; }
+  function printFound() { $("scan").innerHTML="Found "+cards+" card(s)"; }
+  </script>
+</html>
