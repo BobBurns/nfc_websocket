@@ -20,4 +20,4 @@ Put the darby.html into your /var/www/ folder if your going to use the pi as a w
 
 Thanks Adafruit for all the tips and tools!
 
-Adafruit rules \_/ !
+Adafruit rules \\o/ !
