@@ -157,7 +157,7 @@ static void ReceiveMessage (CFSocketRef, CFSocketCallBackType, CFDataRef, const 
 }
 
 - (IBAction)connect:(id)sender {
-    NSString *hostname = @"71.204.163.123";
+    NSString *hostname = @"xx.xx.xx.xx"
     NSString *pass = [_passField stringValue];
     [self connectToHost:hostname asUser:pass];
     
